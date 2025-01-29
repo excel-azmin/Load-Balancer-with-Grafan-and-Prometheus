@@ -230,3 +230,173 @@ Configure SNMP to monitor your network devices and add SNMP as a data source in 
 
 🚀 **Your monitoring system is now ready!** 🎉
 
+
+# Setting Up Nginx Reverse Proxy for Grafana (monitoring.arcapps.org)
+
+To access Grafana using **monitoring.arcapps.org** instead of `http://202.91.42.206:3000/`, follow these steps to configure **Nginx as a reverse proxy**.
+
+---
+
+## ✅ Step 1: Install Nginx on CarePro-LB
+If Nginx is not already installed, install it:
+
+```bash
+sudo apt update
+sudo apt install nginx -y
+```
+
+Check if Nginx is running:
+
+```bash
+sudo systemctl status nginx
+```
+
+If it's not running, start and enable it:
+
+```bash
+sudo systemctl start nginx
+sudo systemctl enable nginx
+```
+
+---
+
+## ✅ Step 2: Configure Nginx Reverse Proxy
+Create a new configuration file for Grafana:
+
+```bash
+sudo nano /etc/nginx/sites-available/grafana
+```
+
+Add the following configuration:
+
+```nginx
+server {
+    listen 80;
+    server_name monitoring.arcapps.org;
+
+    location / {
+        proxy_pass http://localhost:3000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    error_page 502 /error502.html;
+}
+```
+
+Save & Exit (`CTRL + X`, then `Y`, then `Enter`).
+
+Enable the new configuration:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/grafana /etc/nginx/sites-enabled/
+```
+
+Test the Nginx configuration for syntax errors:
+
+```bash
+sudo nginx -t
+```
+
+If successful, you should see:
+
+```bash
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+Restart Nginx to apply changes:
+
+```bash
+sudo systemctl restart nginx
+```
+
+---
+
+## ✅ Step 3: Update DNS Records
+Go to your **DNS provider (Cloudflare, Namecheap, GoDaddy, etc.)** and:
+
+Create an **A Record**:
+- **Name**: `monitoring`
+- **Type**: `A`
+- **Value**: `202.91.42.206`
+- **TTL**: `Auto`
+
+Wait a few minutes for DNS changes to propagate.
+
+---
+
+## ✅ Step 4: Secure Grafana with SSL (Let's Encrypt)
+For **HTTPS (SSL/TLS) support**, install **Certbot** and get a **free SSL certificate** from Let's Encrypt:
+
+Install **Certbot**:
+
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+```
+
+Run Certbot to generate SSL for **monitoring.arcapps.org**:
+
+```bash
+sudo certbot --nginx -d monitoring.arcapps.org
+```
+
+Certbot will:
+- **Automatically configure Nginx for HTTPS**.
+- **Obtain and install an SSL certificate**.
+- When prompted, **choose option 2** to **redirect all traffic to HTTPS**.
+
+Verify SSL:
+
+```bash
+sudo certbot renew --dry-run
+```
+
+---
+
+## ✅ Step 5: Access Grafana via Domain
+Now, you can access Grafana at:
+
+```
+https://monitoring.arcapps.org
+```
+
+---
+
+## ✅ Step 6: Adjust Grafana Configuration
+To ensure **Grafana works correctly behind Nginx**:
+
+Edit **Grafana config**:
+
+```bash
+sudo nano /etc/grafana/grafana.ini
+```
+
+Find `[server]` section and update:
+
+```ini
+[server]
+domain = monitoring.arcapps.org
+root_url = %(protocol)s://%(domain)s/
+serve_from_sub_path = false
+```
+
+Restart Grafana:
+
+```bash
+sudo systemctl restart grafana-server
+```
+
+---
+
+## 🎯 Final Checklist
+✅ **Nginx Reverse Proxy Configured**  
+✅ **DNS Updated (`monitoring.arcapps.org` → `202.91.42.206`)**  
+✅ **SSL (HTTPS) Enabled with Let's Encrypt**  
+✅ **Grafana Config Adjusted for Reverse Proxy**  
+
+🚀 **Now, you can access Grafana at** → [**https://monitoring.arcapps.org**](https://monitoring.arcapps.org) 🎉
+
+
+
