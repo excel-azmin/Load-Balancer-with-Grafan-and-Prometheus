@@ -157,7 +157,7 @@ To monitor IIS, **enable IIS Collector** in Windows Exporter:
 1. Go to **Dashboards → Manage**.
 2. Click **Import** and use the following dashboard IDs:
    - **Windows Node Exporter**: `3662, 20763, 22321, 21697`
-   - **IIS Metrics**: `12495`
+   - **IIS Metrics**: `14532`
 3. Customize as needed.
 
 ### Create Alerts
