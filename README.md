@@ -148,7 +148,11 @@ Ensure metrics are being exposed.
 ### Add IIS Metrics (Optional)
 To monitor IIS, **enable IIS Collector** in Windows Exporter:
 ```powershell
-"C:\Program Files\windows_exporter\windows_exporter.exe" --collectors.enabled "iis"
+Stop-Service windows_exporter
+
+& "C:\Program Files\windows_exporter\windows_exporter.exe" --collectors.enabled "iis"
+
+Start-Service windows_exporter
 ```
 
 ---
